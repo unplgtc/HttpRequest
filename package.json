@@ -1,0 +1,22 @@
+{
+  "name": "httprequest",
+  "version": "0.0.0",
+  "description": "Simple Node HTTP request builder",
+  "main": "src/HttpRequest.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unplgtc/HttpRequest.git"
+  },
+  "author": "Alex Guyot",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/unplgtc/HttpRequest/issues"
+  },
+  "homepage": "https://github.com/unplgtc/HttpRequest#readme",
+  "dependencies": {
+    "request": "^2.87.0"
+  }
+}
