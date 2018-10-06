@@ -1,22 +1,29 @@
 {
-  "name": "httprequest",
+  "name": "@unplgtc/http-request",
   "version": "0.0.0",
   "description": "Simple Node HTTP request builder",
   "main": "src/HttpRequest.js",
   "scripts": {
-    "test": "npm test"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/unplgtc/HttpRequest.git"
   },
-  "author": "Alex Guyot",
+  "author": "Alex Guyot <guyot@unapologetic.io> (https://unapologetic.io)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/unplgtc/HttpRequest/issues"
   },
   "homepage": "https://github.com/unplgtc/HttpRequest#readme",
+  "devDependencies": {
+    "jest": "^23.4.2"
+  },
   "dependencies": {
-    "request": "^2.87.0"
+    "@unplgtc/cblogger": "0.0.1",
+    "@unplgtc/standard-error": "0.0.1",
+    "@unplgtc/standard-promise": "0.0.1",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5"
   }
 }

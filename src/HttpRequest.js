@@ -1,109 +1,91 @@
 'use strict';
 
-const Request = require('./Request');
-const StandardError = require('./StandardError');
-const _ = require('./StandardPromise');
+const _ = require('@unplgtc/standard-promise');
+const rp = require('request-promise-native');
+const StandardError = require('@unplgtc/standard-error');
 
 const HttpRequest = {
 	get payload() {
-		var payload = {
-			url: this.url
+		return {
+			...this.url != null     ? { url: this.url         } : null,
+			...this.headers != null ? { headers: this.headers } : null,
+			...this.body != null    ? { body: this.body       } : null,
+			...this.json != null    ? { json: this.json       } : null
 		}
-		if (this.headers) {
-			payload.headers = this.headers;
-		}
-		if (this.body) {
-			payload.body = this.body;
-		}
-		if (this.json) {
-			payload.json = this.json;
-		}
-
-		return payload;
 	},
 
-	init: function (data) {
-		if (data.url) {
-			this.url = data.url;
-		}
-		if (data.headers) {
-			this.headers = data.headers;
-		}
-		if (data.body) {
-			this.body = data.body;
-		}
-		if (data.json) {
-			this.json = data.json;
-		}
+	create() {
+		return Object.create(this);
+	},
+
+	build(data = {}) {
+		data.url != null ? this.url = data.url : null;
+		data.headers != null ? this.headers = data.headers : null;
+		data.body != null ? this.body = data.body : null;
+		data.json != null ? this.json = data.json : null;
 		return this;
 	},
 
 	setUrl(url) {
 		this.url = url;
+		return this;
 	},
 
 	setHeader(key, value) {
+		if (!this.headers) {
+			this.headers = {};
+		}
 		this.headers[key] = value;
+		return this;
 	},
 
 	setHeaders(headers) {
 		this.headers = headers;
+		return this;
 	},
 
 	setBody(body) {
 		this.body = body;
+		return this;
 	},
 
 	setJson(json) {
 		this.json = json;
+		return this;
 	}
 }
 
 const HttpRequestExecutor = {
-	get: async function(payload = this.payload) {
-		return new Promise(async(resolve, reject) => {
-			if (!payload) {
-				reject(StandardError[700]);
-			}
-			var res = await _(Request.get(payload));
-
-			resolve(res);
-		});
+	get(payload = this.payload) {
+		return Promise.resolve(_(this.execute('get', payload)));
 	},
 
-	post: async function(payload = this.payload) {
-		return new Promise(async(resolve, reject) => {
-			if (!payload) {
-				reject(StandardError[700]);
-			}
-			var res = await _(Request.post(payload));
-
-			resolve(res);
-		});
+	post(payload = this.payload) {
+		return Promise.resolve(_(this.execute('post', payload)));
 	},
 
-	put: async function(payload = this.payload) {
-		return new Promise(async(resolve, reject) => {
-			if (!payload) {
-				reject(StandardError[700]);
-			}
-			var res = await _(Request.put(payload));
-
-			resolve(res);
-		});
+	put(payload = this.payload) {
+		return Promise.resolve(_(this.execute('put', payload)));
 	},
 
-	delete: async function(payload = this.payload) {
-		return new Promise(async(resolve, reject) => {
-			if (!payload) {
-				reject(StandardError[700]);
-			}
-			var res = await _(Request.delete(payload));
+	delete(payload = this.payload) {
+		return Promise.resolve(_(this.execute('delete', payload)));
+	},
 
-			resolve(res);
+	execute: async function(method, payload = this.payload) {
+		return new Promise(async(resolve, reject) => {
+			if (!Object.keys(payload).length || !payload.url) {
+				reject(StandardError.HttpRequestExecutor_400);
+			} else {
+				resolve(rp[method](payload));
+			}
 		});
 	}
 }
+
+StandardError.add([
+	{code: 'HttpRequestExecutor_400', domain: 'HttpRequest', title: 'Bad Request', message: 'Cannot execute HttpRequest with empty payload or url'}
+]);
 
 // Delegate from HttpRequest to HttpRequestExecutor
 Object.setPrototypeOf(HttpRequest, HttpRequestExecutor);
