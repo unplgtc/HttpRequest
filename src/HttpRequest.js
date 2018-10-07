@@ -57,29 +57,27 @@ const HttpRequest = {
 
 const HttpRequestExecutor = {
 	get(payload = this.payload) {
-		return Promise.resolve(_(this.execute('get', payload)));
+		return _(this.execute('get', payload));
 	},
 
 	post(payload = this.payload) {
-		return Promise.resolve(_(this.execute('post', payload)));
+		return _(this.execute('post', payload));
 	},
 
 	put(payload = this.payload) {
-		return Promise.resolve(_(this.execute('put', payload)));
+		return _(this.execute('put', payload));
 	},
 
 	delete(payload = this.payload) {
-		return Promise.resolve(_(this.execute('delete', payload)));
+		return _(this.execute('delete', payload));
 	},
 
-	execute: async function(method, payload = this.payload) {
-		return new Promise(async(resolve, reject) => {
-			if (!Object.keys(payload).length || !payload.url) {
-				reject(StandardError.HttpRequestExecutor_400);
-			} else {
-				resolve(rp[method](payload));
-			}
-		});
+	execute(method, payload = this.payload) {
+		if (!Object.keys(payload).length || !payload.url) {
+			return Promise.reject(StandardError.HttpRequestExecutor_400);
+		} else {
+			return rp[method](payload);
+		}
 	}
 }
 
