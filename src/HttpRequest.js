@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('@unplgtc/standard-promise');
 const rp = require('request-promise-native');
 const StandardError = require('@unplgtc/standard-error');
 
@@ -57,19 +56,19 @@ const HttpRequest = {
 
 const HttpRequestExecutor = {
 	get(payload = this.payload) {
-		return _(this.execute('get', payload));
+		return this.execute('get', payload);
 	},
 
 	post(payload = this.payload) {
-		return _(this.execute('post', payload));
+		return this.execute('post', payload);
 	},
 
 	put(payload = this.payload) {
-		return _(this.execute('put', payload));
+		return this.execute('put', payload);
 	},
 
 	delete(payload = this.payload) {
-		return _(this.execute('delete', payload));
+		return this.execute('delete', payload);
 	},
 
 	execute(method, payload = this.payload) {
