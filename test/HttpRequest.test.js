@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('@unplgtc/standard-promise');
 const HttpRequest = require('./../src/HttpRequest');
 const rp = require('request-promise-native');
 const StandardError = require('@unplgtc/standard-error');
@@ -57,14 +56,10 @@ test('Can send a GET request', async() => {
 
 	// Execute
 	var res = await req.get();
-	var res2 = await _(req.get());
 
 	// Test
 	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res.err).toBe(undefined);
-	expect(res.data).toBe(simpleMockedResponse);
-	expect(res2.err).toBe(undefined);
-	expect(res2.data).toBe(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
 });
 
 test('Can send a POST request', async() => {
@@ -76,14 +71,10 @@ test('Can send a POST request', async() => {
 
 	// Execute
 	var res = await req.post();
-	var res2 = await _(req.post());
 
 	// Test
 	expect(rp.post).toHaveBeenCalledWith(req.payload);
-	expect(res.err).toBe(undefined);
-	expect(res.data).toBe(simpleMockedResponse);
-	expect(res2.err).toBe(undefined);
-	expect(res2.data).toBe(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
 });
 
 test('Can send a PUT request', async() => {
@@ -95,14 +86,10 @@ test('Can send a PUT request', async() => {
 
 	// Execute
 	var res = await req.put();
-	var res2 = await _(req.put());
 
 	// Test
 	expect(rp.put).toHaveBeenCalledWith(req.payload);
-	expect(res.err).toBe(undefined);
-	expect(res.data).toBe(simpleMockedResponse);
-	expect(res2.err).toBe(undefined);
-	expect(res2.data).toBe(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
 });
 
 test('Can send a DELETE request', async() => {
@@ -114,14 +101,10 @@ test('Can send a DELETE request', async() => {
 
 	// Execute
 	var res = await req.delete();
-	var res2 = await _(req.delete());
 
 	// Test
 	expect(rp.delete).toHaveBeenCalledWith(req.payload);
-	expect(res.err).toBe(undefined);
-	expect(res.data).toBe(simpleMockedResponse);
-	expect(res2.err).toBe(undefined);
-	expect(res2.data).toBe(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
 });
 
 test('Can build and send a request in one line', async() => {
@@ -135,8 +118,7 @@ test('Can build and send a request in one line', async() => {
 
 	// Test
 	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res.err).toBe(undefined);
-	expect(res.data).toBe(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
 });
 
 test('StandardError returned when request is made with empty payload', async() => {
@@ -145,12 +127,14 @@ test('StandardError returned when request is made with empty payload', async() =
 	req.build();
 
 	// Execute
-	var res = await _(req.get());
+	var resErr;
+	var res = await req.get()
+		.catch((err) => { resErr = err });
 
 	// Test
 	expect(rp.get).not.toHaveBeenCalled();
-	expect(res.err).toEqual(StandardError.HttpRequestExecutor_400);
-	expect(res.data).toBe(undefined);
+	expect(resErr).toEqual(StandardError.HttpRequestExecutor_400);
+	expect(res).toBe(undefined);
 });
 
 test('StandardError returned when request is made with empty url', async() => {
@@ -159,15 +143,17 @@ test('StandardError returned when request is made with empty url', async() => {
 	req.build(payloadWithoutUrl);
 
 	// Execute
-	var res = await _(req.get());
+	var resErr;
+	var res = await req.get()
+		.catch((err) => { resErr = err });
 
 	// Test
 	expect(rp.get).not.toHaveBeenCalled();
-	expect(res.err).toEqual(StandardError.HttpRequestExecutor_400);
-	expect(res.data).toBe(undefined);
+	expect(resErr).toEqual(StandardError.HttpRequestExecutor_400);
+	expect(res).toBe(undefined);
 });
 
-test('Can execute a request directly without automatic StandardPromise', async() => {
+test('Can execute a request directly', async() => {
 	// Setup
 	rp.get.mockResolvedValue(simpleMockedResponse);
 
@@ -176,13 +162,10 @@ test('Can execute a request directly without automatic StandardPromise', async()
 
 	// Execute
 	var res = await req.execute('get');
-	var res2 = await _(req.execute('get'));
 
 	// Test
 	expect(rp.get).toHaveBeenCalledWith(req.payload);
 	expect(res).toBe(simpleMockedResponse);
-	expect(res2.err).toBe(undefined);
-	expect(res2.data).toBe(simpleMockedResponse);
 });
 
 test('Can assemble a request piece by piece', async() => {
@@ -200,8 +183,7 @@ test('Can assemble a request piece by piece', async() => {
 
 	// Test
 	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res.err).toBe(undefined);
-	expect(res.data).toBe(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
 });
 
 test('Can chain the piece by piece assembly of a request', async() => {
@@ -219,8 +201,7 @@ test('Can chain the piece by piece assembly of a request', async() => {
 
 	// Test
 	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res.err).toBe(undefined);
-	expect(res.data).toBe(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
 });
 
 test('Can chain creation, assembly, and execution of an HttpRequest', async() => {
@@ -237,6 +218,5 @@ test('Can chain creation, assembly, and execution of an HttpRequest', async() =>
 
 	// Test
 	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res.err).toBe(undefined);
-	expect(res.data).toBe(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
 });
