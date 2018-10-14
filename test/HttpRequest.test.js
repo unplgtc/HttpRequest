@@ -133,7 +133,7 @@ test('StandardError returned when request is made with empty payload', async() =
 
 	// Test
 	expect(rp.get).not.toHaveBeenCalled();
-	expect(resErr).toEqual(StandardError.HttpRequestExecutor_400);
+	expect(resErr).toEqual(StandardError.HttpRequestExecutor_400());
 	expect(res).toBe(undefined);
 });
 
@@ -149,7 +149,7 @@ test('StandardError returned when request is made with empty url', async() => {
 
 	// Test
 	expect(rp.get).not.toHaveBeenCalled();
-	expect(resErr).toEqual(StandardError.HttpRequestExecutor_400);
+	expect(resErr).toEqual(StandardError.HttpRequestExecutor_400());
 	expect(res).toBe(undefined);
 });
 

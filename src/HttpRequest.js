@@ -73,7 +73,7 @@ const HttpRequestExecutor = {
 
 	execute(method, payload = this.payload) {
 		if (!Object.keys(payload).length || !payload.url) {
-			return Promise.reject(StandardError.HttpRequestExecutor_400);
+			return Promise.reject(StandardError.HttpRequestExecutor_400());
 		} else {
 			return rp[method](payload);
 		}
