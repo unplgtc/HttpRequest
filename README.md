@@ -27,7 +27,7 @@ var anotherReq = HttpRequest.create();
 
 `HttpRequest.create()` is just a shortcut for `Object.create(HttpRequest)`, so they can be used entirely interchangeably based on your code style preferences.
 
-HttpRequests currently support four fields: `url`, `headers`, `body`, and `json`. You can set all fields with a single payload using the `build()` function.
+HttpRequests currently support six **Native Fields**: `url`, `headers`, `body`, `json`, `qs`, and `resolveWithFullResponse`. All additional fields supported by the [request package](https://www.npmjs.com/package/request) are still supported as **Option Fields**. All fields, both optional and native, can be set with a single payload using the `build()` function.
 
 ```js
 var req = HttpRequest.create();
@@ -43,7 +43,18 @@ req.build({
 });
 ```
 
-Alternatively, set each field individually with `setUrl()`, `setHeaders()`, `setBody()`, and `setJson()`. If you need to set individual headers rather than all of them at once, `setHeader()` takes care of that. Due to the fluid interface, these functions can be chained together on the initially created Object:
+### Native Fields
+
+Each native field can be set individually, using the specified setter below, or referenced as a direct child of the HttpRequest object instance.
+
+| Field Name                | Setter                         |
+| ------------------------- | ------------------------------ |
+| `url`                     | `setUrl()`                     |
+| `headers`                 | `setHeaders()`                 |
+| `body`                    | `setBody()`                    |
+| `json`                    | `setJson()`                    |
+| `qs`                      | `setQs()`                      |
+| `resolveWithFullResponse` | `setResolveWithFullResponse()` |
 
 ```js
 var req = HttpRequest.create()
@@ -55,8 +66,39 @@ var req = HttpRequest.create()
 	.setBody({
 		someKey: 'some_value'
 	})
-	.setJson(true);
+	.setJson(true)
+	.setResolveWithFullResponse(true);
 ```
+
+### Option Fields
+
+All option fields can be set using the `setOptions()` or `setOption()` methods and directly referenced as a child of the `options` field of the HttpRequest object instance.
+
+```js
+var req = HttpRequest.create();
+req.build({
+	url: 'some_url',
+	optionalField: 'data'
+});
+
+// get the optional field's data
+var optionalData = req.options.optionalField;
+
+// set an optional field to a new value
+req.setOption('optionalField', 'other_data');
+```
+
+#### setOptions(options)
+
+A function that sets all options to the specified payload. Any existing option fields will be overwritten.
+
+#### setOption(key, value)
+
+The first argument is the name of the option to update. The second argument is the value to store for the specified option.
+
+The option field with the specified key will be updated to the provided value.
+
+---
 
 Send a request using the `.get()`, `.post()`, `.put()`, and `.delete()` methods.
 

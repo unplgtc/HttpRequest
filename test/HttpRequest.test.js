@@ -220,3 +220,87 @@ test('Can chain creation, assembly, and execution of an HttpRequest', async() =>
 	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
 	expect(res).toBe(simpleMockedResponse);
 });
+
+test('Can send a GET request with a query string', async() => {
+	// Setup
+	rp.get.mockResolvedValue(simpleMockedResponse);
+
+	var req = Object.create(HttpRequest);
+	req.build({
+		...simpleGetDeletePayload,
+		qs: {
+			query: 'some string',
+			page: 4
+		}
+	});
+
+	// Execute
+	var res = await req.get();
+
+	// Test
+	expect(req.payload.qs).toEqual({
+		query: 'some string',
+		page: 4
+	});
+	expect(rp.get).toHaveBeenCalledWith(req.payload);
+	expect(res).toBe(simpleMockedResponse);
+});
+
+test('Can send a request with "resolveWithFullResponse" flag', async() => {
+	// Setup
+	rp.get.mockResolvedValue(simpleMockedResponse);
+
+	var req = Object.create(HttpRequest);
+	req.build({
+		...simpleGetDeletePayload,
+		resolveWithFullResponse: true
+	});
+
+	// Execute
+	var res = await req.get();
+
+	// Test
+	expect(req.payload.resolveWithFullResponse).toBe(true);
+	expect(rp.get).toHaveBeenCalledWith(req.payload);
+	expect(res).toBe(simpleMockedResponse);
+});
+
+test('Can send a GET request with additional option arguments', async() => {
+	// Setup
+	rp.get.mockResolvedValue(simpleMockedResponse);
+
+	var req = Object.create(HttpRequest);
+	req.build({
+		...simpleGetDeletePayload,
+		someTestingOption: true
+	});
+
+	// Execute
+	var res = await req.get();
+
+	// Test
+	expect(req.payload.someTestingOption).toBe(true);
+	expect(rp.get).toHaveBeenCalledWith(req.payload);
+	expect(res).toBe(simpleMockedResponse);
+});
+
+test('Can edit a POST request optional parameter after creation', async() => {
+	// Setup
+	rp.post.mockResolvedValue(simpleMockedResponse);
+
+	var req = Object.create(HttpRequest);
+	req.build({
+		...simplePutPostPayload,
+		myTestOption: 1234
+	});
+	
+	req.setOption('myTestOption', 4321);
+
+	// Execute
+	var res = await req.post();
+
+	// Test
+	expect(req.payload.myTestOption).toBe(4321);
+	expect(rp.post).toHaveBeenCalledWith(req.payload);
+	expect(res).toBe(simpleMockedResponse);
+});

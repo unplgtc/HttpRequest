@@ -6,10 +6,15 @@ const StandardError = require('@unplgtc/standard-error');
 const HttpRequest = {
 	get payload() {
 		return {
-			...this.url != null     ? { url: this.url         } : null,
-			...this.headers != null ? { headers: this.headers } : null,
-			...this.body != null    ? { body: this.body       } : null,
-			...this.json != null    ? { json: this.json       } : null
+			...(this.options != null && this.options),
+			...(this.url != null     && { url: this.url         }),
+			...(this.headers != null && { headers: this.headers }),
+			...(this.body != null    && { body: this.body       }),
+			...(this.json != null    && { json: this.json       }),
+			...(this.qs != null      && { qs: this.qs           }),
+			...(this.resolveWithFullResponse != null && { 
+				resolveWithFullResponse: this.resolveWithFullResponse 
+			})
 		}
 	},
 
@@ -18,10 +23,17 @@ const HttpRequest = {
 	},
 
 	build(data = {}) {
-		data.url != null ? this.url = data.url : null;
-		data.headers != null ? this.headers = data.headers : null;
-		data.body != null ? this.body = data.body : null;
-		data.json != null ? this.json = data.json : null;
+		const {url, headers, body, json, qs, resolveWithFullResponse, ...options} = data;
+
+		url != null     && (this.url = url);
+		headers != null && (this.headers = headers);
+		body != null    && (this.body = body);
+		json != null    && (this.json = json);
+		qs != null      && (this.qs = qs);
+		resolveWithFullResponse != null && (this.resolveWithFullResponse = resolveWithFullResponse);
+
+		Object.keys(options).length > 0 && (this.options = options);
+
 		return this;
 	},
 
@@ -51,6 +63,29 @@ const HttpRequest = {
 	setJson(json) {
 		this.json = json;
 		return this;
+	},
+
+	setResolveWithFullResponse(resolveWithFullResponse) {
+		this.resolveWithFullResponse = resolveWithFullResponse;
+		return this;
+	},
+
+	setQs(qs) {
+		this.qs = qs;
+		return this;
+	},
+
+	setOption(key, value) {
+		return this.build({
+			...(this.options != null && this.options), 
+			[key]: value 
+		});
+	},
+
+	setOptions(options) {
+		this.options = {};
+		// set native fields first, then options
+		return this.build(options);
 	}
 }
 
