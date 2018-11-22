@@ -1,6 +1,6 @@
 {
   "name": "@unplgtc/http-request",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Builder-style HTTP request executor for Node applications",
   "main": "src/HttpRequest.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "jest": "^23.4.2"
   },
   "dependencies": {
-    "@unplgtc/cblogger": "1.0.1",
+    "@unplgtc/cblogger": "1.0.2",
     "@unplgtc/standard-error": "1.0.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.5"
