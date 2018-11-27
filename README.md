@@ -5,7 +5,7 @@
 
 ### Builder-style HTTP request executor for Node applications
 
-HttpRequest is a simple Node HTTP client which implments a [fluid interface](https://en.wikipedia.org/wiki/Fluent_interface) to build and send requests. HttpRequest Objects can be built in a number of different ways, including building and sending them imediately or building them over time and sending after all requires pieces have been assembled. HttpRequest encourages thinking of requests as Objects rather than actions: an HttpRequest Object holds its payload internally and can send it at any time — immedaitely or later on. This is a subtle but important distinction from other HTTP clients which expect a completed payload to be passed into a function call for instant execution.
+HttpRequest is a simple Node HTTP client which implements a [fluid interface](https://en.wikipedia.org/wiki/Fluent_interface) to build and send requests. HttpRequest Objects can be built in a number of different ways, including building and sending them immediately or building them over time and sending after all requires pieces have been assembled. HttpRequest encourages thinking of requests as Objects rather than actions: an HttpRequest Object holds its payload internally and can send it at any time — immediately or later on. This is a subtle but important distinction from other HTTP clients which expect a completed payload to be passed into a function call for instant execution.
 
 HttpRequest Objects can be reused to fire the same request multiple time in a row, or to tweak a few request fields for different requests while persisting common values. They can be passed between functions and triggered by any of them without needing a particular function to deal with execution details. The fluid interface allows building HttpRequests with a chained syntax that is clear and concise.
 
@@ -27,7 +27,7 @@ var anotherReq = HttpRequest.create();
 
 `HttpRequest.create()` is just a shortcut for `Object.create(HttpRequest)`, so they can be used entirely interchangeably based on your code style preferences.
 
-HttpRequests currently support six **Native Fields**: `url`, `headers`, `body`, `json`, `qs`, and `resolveWithFullResponse`. All additional fields supported by the [request package](https://www.npmjs.com/package/request) are still supported as **Option Fields**. All fields, both optional and native, can be set with a single payload using the `build()` function.
+HttpRequests currently support seven **Native Fields**: `url`, `headers`, `body`, `json`, `qs`, `timeout`, and `resolveWithFullResponse`. All additional fields supported by the [request package](https://www.npmjs.com/package/request) are still supported as **Option Fields**. All fields, both optional and native, can be set with a single payload using the `build()` function.
 
 ```js
 var req = HttpRequest.create();
@@ -39,6 +39,7 @@ req.build({
 	body: {
 		someKey: 'some_value'
 	},
+	timeout: 5000,
 	json: true
 });
 ```
@@ -54,6 +55,7 @@ Each native field can be set individually, using the specified setter below, or 
 | `body`                    | `setBody()`                    |
 | `json`                    | `setJson()`                    |
 | `qs`                      | `setQs()`                      |
+| `timeout`                 | `setTimeout()`                 |
 | `resolveWithFullResponse` | `setResolveWithFullResponse()` |
 
 ```js
@@ -67,6 +69,7 @@ var req = HttpRequest.create()
 		someKey: 'some_value'
 	})
 	.setJson(true)
+	.setTimeout(3000)
 	.setResolveWithFullResponse(true);
 ```
 
@@ -134,3 +137,12 @@ var req = HttpRequest.create()
 console.log(req.payload);
 // { url: 'some_url' }
 ```
+
+## Further Documentation
+
+Please refer to the [`request-promise` documentation](https://www.npmjs.com/package/request-promise) for further specifications such as the response data format and additional optional fields. Everything with the response and options will be the same except the following:
+
+- This implementation uses [`request-promise-native`](https://www.npmjs.com/package/request-promise-native) that uses native ES6 promises instead of Bluebird promises.
+- Mind that native ES6 promises have fewer features than Bluebird promises do. In particular, the .finally(...) method is not available.
+- `resolveWithFullResponse` is set to `true` by default, meaning the response data is much closer to the [`request` library](https://www.npmjs.com/package/request) format and `statusCode` and `headers` will be included in each response.
+    - Setting `resolveWithFullResponse` to `false` will return only the body of the response once the Promise is resolved. 

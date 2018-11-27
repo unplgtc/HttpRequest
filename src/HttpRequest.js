@@ -12,9 +12,10 @@ const HttpRequest = {
 			...(this.body != null    && { body: this.body       }),
 			...(this.json != null    && { json: this.json       }),
 			...(this.qs != null      && { qs: this.qs           }),
-			...(this.resolveWithFullResponse != null && { 
-				resolveWithFullResponse: this.resolveWithFullResponse 
-			})
+			...(this.timeout != null && { timeout: this.timeout }),
+			resolveWithFullResponse: (this.resolveWithFullResponse != null ?
+				this.resolveWithFullResponse : true
+			)
 		}
 	},
 
@@ -23,13 +24,14 @@ const HttpRequest = {
 	},
 
 	build(data = {}) {
-		const {url, headers, body, json, qs, resolveWithFullResponse, ...options} = data;
+		const {url, headers, body, json, qs, resolveWithFullResponse, timeout, ...options} = data;
 
 		url != null     && (this.url = url);
 		headers != null && (this.headers = headers);
 		body != null    && (this.body = body);
 		json != null    && (this.json = json);
 		qs != null      && (this.qs = qs);
+		timeout != null && (this.timeout = timeout);
 		resolveWithFullResponse != null && (this.resolveWithFullResponse = resolveWithFullResponse);
 
 		Object.keys(options).length > 0 && (this.options = options);
@@ -72,6 +74,11 @@ const HttpRequest = {
 
 	setQs(qs) {
 		this.qs = qs;
+		return this;
+	},
+
+	setTimeout(timeout) {
+		this.timeout = timeout;
 		return this;
 	},
 
