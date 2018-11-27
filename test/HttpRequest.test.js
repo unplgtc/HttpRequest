@@ -11,7 +11,8 @@ var simpleGetDeletePayload = {
 	headers: {
 		header1: 'test_header'
 	},
-	json: true
+	json: true,
+	resolveWithFullResponse: true
 }
 
 var simplePutPostPayload = {
@@ -22,7 +23,8 @@ var simplePutPostPayload = {
 	body: {
 		testing: true
 	},
-	json: true
+	json: true,
+	resolveWithFullResponse: true
 }
 
 var payloadWithoutUrl = {
@@ -246,6 +248,43 @@ test('Can send a GET request with a query string', async() => {
 	expect(res).toBe(simpleMockedResponse);
 });
 
+test('Has a proper default payload value for "resolveWithFullResponse"', async() => {
+	// Setup
+	rp.get.mockResolvedValue(simpleMockedResponse);
+	
+	var {resolveWithFullResponse, ...reqPayload} = simpleGetDeletePayload;
+
+	var req = Object.create(HttpRequest);
+	req.build(reqPayload);
+
+	// Execute
+	var res = await req.get();
+
+	// Test
+	expect(req.payload.resolveWithFullResponse).toBe(true);
+	expect(rp.get).toHaveBeenCalledWith(req.payload);
+	expect(res).toBe(simpleMockedResponse);
+});
+
+test('Can send a request with a timeout', async() => {
+	// Setup
+	rp.get.mockResolvedValue(simpleMockedResponse);
+
+	var req = Object.create(HttpRequest);
+	req.build({
+		...simpleGetDeletePayload,
+		timeout: 3000
+	});
+
+	// Execute
+	var res = await req.get();
+
+	// Test
+	expect(req.payload.timeout).toBe(3000);
+	expect(rp.get).toHaveBeenCalledWith(req.payload);
+	expect(res).toBe(simpleMockedResponse);
+});
+
 test('Can send a request with "resolveWithFullResponse" flag', async() => {
 	// Setup
 	rp.get.mockResolvedValue(simpleMockedResponse);
@@ -253,14 +292,14 @@ test('Can send a request with "resolveWithFullResponse" flag', async() => {
 	var req = Object.create(HttpRequest);
 	req.build({
 		...simpleGetDeletePayload,
-		resolveWithFullResponse: true
+		resolveWithFullResponse: false
 	});
 
 	// Execute
 	var res = await req.get();
 
 	// Test
-	expect(req.payload.resolveWithFullResponse).toBe(true);
+	expect(req.payload.resolveWithFullResponse).toBe(false);
 	expect(rp.get).toHaveBeenCalledWith(req.payload);
 	expect(res).toBe(simpleMockedResponse);
 });
