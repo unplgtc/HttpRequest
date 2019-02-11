@@ -11,6 +11,12 @@ HttpRequest Objects can be reused to fire the same request multiple time in a ro
 
 ## Usage
 
+Install HttpRequest from npm:
+
+```
+$ npm install @unplgtc/http-request --save
+```
+
 Import HttpRequest into your Node project:
 
 ```js
@@ -116,7 +122,7 @@ var res = HttpRequest.create()
 	.setUrl('some_url')
 	.setHeader('Authorization', 'some_token')
 	.setBody({ someKey: 'some_value' })
-	.setJson(true);
+	.setJson(true)
 	.post();
 ```
 
