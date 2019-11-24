@@ -175,10 +175,10 @@ test('Can assemble a request piece by piece', async() => {
 	rp.post.mockResolvedValue(simpleMockedResponse);
 
 	var req = Object.create(HttpRequest);
-	req.setUrl(simplePutPostPayload.url);
-	req.setHeaders(simplePutPostPayload.headers);
-	req.setBody(simplePutPostPayload.body);
-	req.setJson(simplePutPostPayload.json);
+	req.url(simplePutPostPayload.url);
+	req.headers(simplePutPostPayload.headers);
+	req.body(simplePutPostPayload.body);
+	req.json(simplePutPostPayload.json);
 
 	// Execute
 	var res = await req.post();
@@ -193,10 +193,29 @@ test('Can chain the piece by piece assembly of a request', async() => {
 	rp.post.mockResolvedValue(simpleMockedResponse);
 
 	var req = Object.create(HttpRequest);
-	req.setUrl(simplePutPostPayload.url)
-	   .setHeader('header1', simplePutPostPayload.headers.header1)
-	   .setBody(simplePutPostPayload.body)
-	   .setJson(simplePutPostPayload.json);
+	req.url(simplePutPostPayload.url)
+	   .header('header1', simplePutPostPayload.headers.header1)
+	   .body(simplePutPostPayload.body)
+	   .json(simplePutPostPayload.json);
+
+	// Execute
+	var res = await req.post();
+
+	// Test
+	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
+	expect(res).toBe(simpleMockedResponse);
+});
+
+test('resolveWithFullResponse and json can be set to true by not passing values', async() => {
+	// Setup
+	rp.post.mockResolvedValue(simpleMockedResponse);
+
+	var req = Object.create(HttpRequest);
+	req.url(simplePutPostPayload.url)
+	   .header('header1', simplePutPostPayload.headers.header1)
+	   .body(simplePutPostPayload.body)
+	   .resolveWithFullResponse()
+	   .json();
 
 	// Execute
 	var res = await req.post();
@@ -212,10 +231,10 @@ test('Can chain creation, assembly, and execution of an HttpRequest', async() =>
 
 	// Execute
 	var res = await HttpRequest.create()
-	                           .setUrl(simplePutPostPayload.url)
-	                           .setHeaders(simplePutPostPayload.headers)
-	                           .setBody(simplePutPostPayload.body)
-	                           .setJson(simplePutPostPayload.json)
+	                           .url(simplePutPostPayload.url)
+	                           .headers(simplePutPostPayload.headers)
+	                           .body(simplePutPostPayload.body)
+	                           .json(simplePutPostPayload.json)
 	                           .post();
 
 	// Test
@@ -333,7 +352,7 @@ test('Can edit a POST request optional parameter after creation', async() => {
 		myTestOption: 1234
 	});
 	
-	req.setOption('myTestOption', 4321);
+	req.option('myTestOption', 4321);
 
 	// Execute
 	var res = await req.post();
