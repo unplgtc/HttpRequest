@@ -107,6 +107,46 @@ The first argument is the name of the option to update. The second argument is t
 
 The option field with the specified key will be updated to the provided value.
 
+### Response Validation
+
+HttpRequest supports the passage of a validation function (a "validator") which will be executed on a successfully returned response. Validators are passed in via the `.validate()` function. When an HttpRequest with a validator is executed, it will automatically `await` the response and (if successful) pass it to the validator. Note that the validator will then be returned by HttpRequest, so validator functions will need to return the data after completion if it is required for further logic. If a response is unsuccessful then the promise will be rejected as usual and the validator will not be called.
+
+```js
+var res = HttpRequest.create()
+    .url('some_url')
+    .header('Authorization', 'some_token')
+    .json(true)
+    .validate(data => {
+        if (data.verificationToken === 'your_verification_token') {
+        	throw new Error('Invalid Verification Token in Response');
+        }
+        return data;
+    })
+    .get()
+```
+
+HttpRequest is unopinionated about your validation functions. Internally it calls `return validator(await rp[method](payload))` instead of its normal `return rp[method](payload)`. If the call to `rp` (`request-promise-native`) fails then that failure is returned as a rejected promise just like in the normal case. If it succeeds then you get to validate your returned data in any way you please. A common use case for this pattern is to verify objects against a JSON schema through a library like [`ajv`](https://github.com/epoberezkin/ajv). This way you can know immediately that a successfully returned result from HttpRequest is a valid object with expected parameters, which can significantly reduce the amount of saftey checks that you may otherwise need scattered throughout your code.
+
+```js
+const Ajv = require('ajv'),
+      UserSchema = require('./path/to/some/UserSchema'),
+      HttpRequest = require('@unplgtc/HttpRequest');
+
+const ajv = new Ajv();
+
+var res = HttpRequest.create()
+    .url('some_url')
+    .header('Authorization', 'some_token')
+    .json(true)
+    .validate(data => {
+		if (!ajv.validate(UserSchema, data)) {
+			throw new Error('Invalid User object returned in Response');
+		}
+        return data;
+    })
+    .get()
+```
+
 ---
 
 Send a request using the `.get()`, `.post()`, `.put()`, and `.delete()` methods.
