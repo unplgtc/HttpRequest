@@ -52,36 +52,36 @@ req.build({
 
 ### Native Fields
 
-Each native field can be set individually, using the specified setter below, or referenced as a direct child of the HttpRequest object instance.
+Each native field can be set individually using its eponymous setter, and can be referenced from the HttpRequest object's `payload` field. An extra `header()` setter exists to set individual values in the `headers` field.
 
 | Field Name                | Setter                         |
 | ------------------------- | ------------------------------ |
-| `url`                     | `setUrl()`                     |
-| `headers`                 | `setHeaders()`                 |
-| `body`                    | `setBody()`                    |
-| `json`                    | `setJson()`                    |
-| `qs`                      | `setQs()`                      |
-| `timeout`                 | `setTimeout()`                 |
-| `resolveWithFullResponse` | `setResolveWithFullResponse()` |
+| `url`                     | `url()`                        |
+| `headers`                 | `headers()`                    |
+| `body`                    | `body()`                       |
+| `json`                    | `json()`                       |
+| `qs`                      | `qs()`                         |
+| `timeout`                 | `timeout()`                    |
+| `resolveWithFullResponse` | `resolveWithFullResponse()`    |
 
 ```js
 var req = HttpRequest.create()
-	.setUrl('some_url')
-	.setHeaders({
+	.url('some_url')
+	.headers({
 		Authorization: 'some_token'
 	})
-	.setHeader('headerTitle', 'header_value')
-	.setBody({
+	.header('headerTitle', 'header_value')
+	.body({
 		someKey: 'some_value'
 	})
-	.setJson(true)
-	.setTimeout(3000)
-	.setResolveWithFullResponse(true);
+	.json(true)
+	.timeout(3000)
+	.resolveWithFullResponse(false);
 ```
 
 ### Option Fields
 
-All option fields can be set using the `setOptions()` or `setOption()` methods and directly referenced as a child of the `options` field of the HttpRequest object instance.
+All option fields can be set using the `options()` or `option()` functions and referenced as children of the `options` field of the HttpRequest object's `payload`.
 
 ```js
 var req = HttpRequest.create();
@@ -91,17 +91,17 @@ req.build({
 });
 
 // get the optional field's data
-var optionalData = req.options.optionalField;
+var optionalData = req.payload.options.optionalField;
 
 // set an optional field to a new value
-req.setOption('optionalField', 'other_data');
+req.option('optionalField', 'other_data');
 ```
 
-#### setOptions(options)
+#### options(options)
 
 A function that sets all options to the specified payload. Any existing option fields will be overwritten.
 
-#### setOption(key, value)
+#### option(key, value)
 
 The first argument is the name of the option to update. The second argument is the value to store for the specified option.
 
@@ -159,10 +159,10 @@ These can of course be chained along with the other functions to immediately bui
 
 ```js
 var res = HttpRequest.create()
-	.setUrl('some_url')
-	.setHeader('Authorization', 'some_token')
-	.setBody({ someKey: 'some_value' })
-	.setJson(true)
+	.url('some_url')
+	.header('Authorization', 'some_token')
+	.body({ someKey: 'some_value' })
+	.json(true)
 	.post();
 ```
 
@@ -178,7 +178,7 @@ Finally, if you have an existing HttpRequest Object and want to review its paylo
 
 ```js
 var req = HttpRequest.create()
-	.setUrl('some_url');
+	.url('some_url');
 
 console.log(req.payload);
 // { url: 'some_url' }
@@ -188,7 +188,7 @@ console.log(req.payload);
 
 Please refer to the [`request-promise` documentation](https://www.npmjs.com/package/request-promise) for further specifications such as the response data format and additional optional fields. Everything with the response and options will be the same except the following:
 
-- This implementation uses [`request-promise-native`](https://www.npmjs.com/package/request-promise-native) that uses native ES6 promises instead of Bluebird promises.
-- Mind that native ES6 promises have fewer features than Bluebird promises do. In particular, the .finally(...) method is not available.
-- `resolveWithFullResponse` is set to `true` by default, meaning the response data is much closer to the [`request` library](https://www.npmjs.com/package/request) format and `statusCode` and `headers` will be included in each response.
-    - Setting `resolveWithFullResponse` to `false` will return only the body of the response once the Promise is resolved. 
+- This implementation uses [`request-promise-native`](https://www.npmjs.com/package/request-promise-native), which itself uses native ES6 promises instead of Bluebird promises.
+- Mind that native ES6 promises have fewer features than Bluebird promises do. In particular, the `.finally(...)` method is not available.
+- In this implementation `resolveWithFullResponse` is set to `true` by default, meaning the response data is equivalent to the [`request` library](https://www.npmjs.com/package/request) format and `statusCode` and `headers` will be included in each response. Unsuccessful status codes will still reject.
+    - Setting `resolveWithFullResponse` to `false` will return only the body of the response once the Promise is resolved successfully, which is the default setting of the [`request-promise-native` library](https://www.npmjs.com/package/request-promise-native)

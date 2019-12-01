@@ -6,15 +6,15 @@ const StandardError = require('@unplgtc/standard-error');
 const HttpRequest = {
 	get payload() {
 		return {
-			...(this.options != null && this.options),
-			...(this.url != null     && { url: this.url         }),
-			...(this.headers != null && { headers: this.headers }),
-			...(this.body != null    && { body: this.body       }),
-			...(this.json != null    && { json: this.json       }),
-			...(this.qs != null      && { qs: this.qs           }),
-			...(this.timeout != null && { timeout: this.timeout }),
-			resolveWithFullResponse: (this.resolveWithFullResponse != null ?
-				this.resolveWithFullResponse : true
+			...(this._options != null && this._options),
+			...(this._url != null     && { url: this._url         }),
+			...(this._headers != null && { headers: this._headers }),
+			...(this._body != null    && { body: this._body       }),
+			...(this._json != null    && { json: this._json       }),
+			...(this._qs != null      && { qs: this._qs           }),
+			...(this._timeout != null && { timeout: this._timeout }),
+			resolveWithFullResponse: (this._resolveWithFullResponse != null ?
+				this._resolveWithFullResponse : true
 			)
 		}
 	},
@@ -26,70 +26,72 @@ const HttpRequest = {
 	build(data = {}) {
 		const {url, headers, body, json, qs, resolveWithFullResponse, timeout, ...options} = data;
 
-		url != null     && (this.url = url);
-		headers != null && (this.headers = headers);
-		body != null    && (this.body = body);
-		json != null    && (this.json = json);
-		qs != null      && (this.qs = qs);
-		timeout != null && (this.timeout = timeout);
-		resolveWithFullResponse != null && (this.resolveWithFullResponse = resolveWithFullResponse);
+		url != null     && (this._url = url);
+		headers != null && (this._headers = headers);
+		body != null    && (this._body = body);
+		json != null    && (this._json = json);
+		qs != null      && (this._qs = qs);
+		timeout != null && (this._timeout = timeout);
+		resolveWithFullResponse != null && (this._resolveWithFullResponse = resolveWithFullResponse);
 
-		Object.keys(options).length > 0 && (this.options = options);
+		Object.keys(options).length > 0 && (this._options = options);
 
 		return this;
 	},
 
-	setUrl(url) {
-		this.url = url;
+	url(url) {
+		this._url = url;
 		return this;
 	},
 
-	setHeader(key, value) {
-		if (!this.headers) {
-			this.headers = {};
+	header(key, value) {
+		if (!this._headers) {
+			this._headers = {};
 		}
-		this.headers[key] = value;
+		this._headers[key] = value;
 		return this;
 	},
 
-	setHeaders(headers) {
-		this.headers = headers;
+	headers(headers) {
+		this._headers = Object.assign(headers, this._headers);
 		return this;
 	},
 
-	setBody(body) {
-		this.body = body;
+	body(body) {
+		this._body = body;
 		return this;
 	},
 
-	setJson(json) {
-		this.json = json;
+	json(json) {
+		// If nothing is passed to this function, set _json to true
+		this._json = json != null ? json : true;
 		return this;
 	},
 
-	setResolveWithFullResponse(resolveWithFullResponse) {
-		this.resolveWithFullResponse = resolveWithFullResponse;
+	resolveWithFullResponse(resolveWithFullResponse) {
+		// If nothing is passed to this function, set _resolveWithFullResponse to true
+		this._resolveWithFullResponse = resolveWithFullResponse != null ? resolveWithFullResponse : true;
 		return this;
 	},
 
-	setQs(qs) {
-		this.qs = qs;
+	qs(qs) {
+		this._qs = qs;
 		return this;
 	},
 
-	setTimeout(timeout) {
-		this.timeout = timeout;
+	timeout(timeout) {
+		this._timeout = timeout;
 		return this;
 	},
 
-	setOption(key, value) {
+	option(key, value) {
 		return this.build({
-			...(this.options != null && this.options), 
+			...(this._options != null && this._options), 
 			[key]: value 
 		});
 	},
 
-	setOptions(options) {
+	options(options) {
 		this.options = {};
 		// set native fields first, then options
 		return this.build(options);
