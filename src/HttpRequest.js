@@ -93,6 +93,16 @@ const HttpRequest = {
 		this.options = {};
 		// set native fields first, then options
 		return this.build(options);
+	},
+
+	validate(validator) {
+		Object.defineProperty(this, 'validator', {
+			value: validator,
+			writable: false,
+			configurable: false,
+			enumerable: false
+		});
+		return this;
 	}
 }
 
@@ -113,12 +123,13 @@ const HttpRequestExecutor = {
 		return this.execute('delete', payload);
 	},
 
-	execute(method, payload = this.payload) {
+	execute: async function(method, payload = this.payload) {
 		if (!Object.keys(payload).length || !payload.url) {
 			return Promise.reject(StandardError.HttpRequestExecutor_400());
-		} else {
-			return rp[method](payload);
 		}
+		return this.validator
+		       ? this.validator(await rp[method](payload))
+		       : rp[method](payload);
 	}
 }
 

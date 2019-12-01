@@ -343,3 +343,29 @@ test('Can edit a POST request optional parameter after creation', async() => {
 	expect(rp.post).toHaveBeenCalledWith(req.payload);
 	expect(res).toBe(simpleMockedResponse);
 });
+
+test('Will call validation function with resolved response data', async() => {
+	// Setup
+	rp.get.mockResolvedValue(simpleMockedResponse);
+
+	const validationFunction = jest.fn(data => {
+		if (!data.testing) {
+			throw new Error('Failed validation!');
+		}
+		return data;
+	});
+
+	var req = Object.create(HttpRequest);
+	req.build({
+		...simpleGetDeletePayload
+	})
+	.validate(validationFunction);
+
+	// Execute
+	var res = await req.get();
+
+	// Test
+	expect(rp.get).toHaveBeenCalledWith(req.payload);
+	expect(validationFunction).toHaveBeenCalledWith(simpleMockedResponse);
+	expect(res).toBe(simpleMockedResponse);
+});
