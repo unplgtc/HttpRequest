@@ -12,10 +12,22 @@ var simpleGetDeletePayload = {
 		header1: 'test_header'
 	},
 	json: true,
-	resolveWithFullResponse: true
+	resolveWithFullResponse: false
 }
 
 var simplePutPostPayload = {
+	url: 'test_url',
+	headers: {
+		header1: 'test_header'
+	},
+	body: {
+		testing: true
+	},
+	json: true,
+	resolveWithFullResponse: false
+}
+
+var resolveWithFullResponsePutPostPayload = {
 	url: 'test_url',
 	headers: {
 		header1: 'test_header'
@@ -221,7 +233,7 @@ test('resolveWithFullResponse and json can be set to true by not passing values'
 	var res = await req.post();
 
 	// Test
-	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
+	expect(rp.post).toHaveBeenCalledWith(resolveWithFullResponsePutPostPayload);
 	expect(res).toBe(simpleMockedResponse);
 });
 
@@ -280,7 +292,7 @@ test('Has a proper default payload value for "resolveWithFullResponse"', async()
 	var res = await req.get();
 
 	// Test
-	expect(req.payload.resolveWithFullResponse).toBe(true);
+	expect(req.payload.resolveWithFullResponse).toBe(false);
 	expect(rp.get).toHaveBeenCalledWith(req.payload);
 	expect(res).toBe(simpleMockedResponse);
 });
