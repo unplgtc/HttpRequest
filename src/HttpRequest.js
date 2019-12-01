@@ -14,7 +14,7 @@ const HttpRequest = {
 			...(this._qs != null      && { qs: this._qs           }),
 			...(this._timeout != null && { timeout: this._timeout }),
 			resolveWithFullResponse: (this._resolveWithFullResponse != null ?
-				this._resolveWithFullResponse : true
+				this._resolveWithFullResponse : false
 			)
 		}
 	},

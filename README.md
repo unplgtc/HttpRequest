@@ -52,7 +52,7 @@ req.build({
 
 ### Native Fields
 
-Each native field can be set individually using its eponymous setter, and can be referenced from the HttpRequest object's `payload` field. An extra `header()` setter exists to set individual values in the `headers` field.
+Each native field can be set individually using its eponymous setter, and can be referenced from the HttpRequest object's `payload` field. Boolean fields (`json` and `resolveWithFullResponse`) can be set to true by not passing any value to the setter (e.g., `.json()` is equivalent to `.json(true)`). An extra `header()` setter exists to set individual values in the `headers` field.
 
 | Field Name                | Setter                         |
 | ------------------------- | ------------------------------ |
@@ -74,9 +74,9 @@ var req = HttpRequest.create()
 	.body({
 		someKey: 'some_value'
 	})
-	.json(true)
 	.timeout(3000)
-	.resolveWithFullResponse(false);
+	.resolveWithFullResponse()
+	.json();
 ```
 
 ### Option Fields
@@ -190,5 +190,4 @@ Please refer to the [`request-promise` documentation](https://www.npmjs.com/pack
 
 - This implementation uses [`request-promise-native`](https://www.npmjs.com/package/request-promise-native), which itself uses native ES6 promises instead of Bluebird promises.
 - Mind that native ES6 promises have fewer features than Bluebird promises do. In particular, the `.finally(...)` method is not available.
-- In this implementation `resolveWithFullResponse` is set to `true` by default, meaning the response data is equivalent to the [`request` library](https://www.npmjs.com/package/request) format and `statusCode` and `headers` will be included in each response. Unsuccessful status codes will still reject.
-    - Setting `resolveWithFullResponse` to `false` will return only the body of the response once the Promise is resolved successfully, which is the default setting of the [`request-promise-native` library](https://www.npmjs.com/package/request-promise-native)
+- `request-promise-native` sets `resolveWithFullResponse` to `false` by default, which means successful responses have only their bodies returned in the resolved Promise. Similarly, unsuccessful responses have only their error bodies returned in the rejected Promise. If you need to examine the entire response, including status codes and headers (as you must do when using the [standard `request` package](https://www.npmjs.com/package/request)), then call `.resolveWithFullResponse()` on your `HttpRequest` object before executing it.
