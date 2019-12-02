@@ -3,7 +3,7 @@
 
 # HttpRequest
 
-### Builder-style HTTP request executor for Node applications
+### Fluent HTTP request executor for Node applications
 
 HttpRequest is a simple Node HTTP client which implements a [fluid interface](https://en.wikipedia.org/wiki/Fluent_interface) to build and send requests. HttpRequest Objects can be built in a number of different ways, including building and sending them immediately or building them over time and sending after all requires pieces have been assembled. HttpRequest encourages thinking of requests as Objects rather than actions: an HttpRequest Object holds its payload internally and can send it at any time — immediately or later on. This is a subtle but important distinction from other HTTP clients which expect a completed payload to be passed into a function call for instant execution.
 
