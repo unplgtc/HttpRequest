@@ -6,20 +6,21 @@ _If you've made a change to an Unapologetic package which requires a new release
 
 ## Commit a new version
 
-- Once your release-ready changes have been accepted and merged into `master`, create a new commit titled `Bump version to [version_number]` (e.g. `Bump version to 2.0.0`) which includes only a single change: bumping the version number in `package.json`. Submit a pull request with only this commit.
+- Once your release-ready changes have been accepted and merged into `master`, create a new commit titled `Bump version to [version_number]` (e.g. `Bump version to 2.0.0`) which includes only a single change: bumping the version number in `package.json`. Submit a pull request with only this commit
+- Your pull request's description should start with "Changelog:" and be followed by a bulleted list of the changes included in this release
+- Save a copy of this changelog, you'll need it to tag your release
 - Wait for your pull request to be merged
 
 ## Tag a new release for the version
 
 - Checkout `master` at the point of your merged version bump pull request
-- Run `git tag -a v[version_number]` (e.g. `get tag -a v2.0.0`)
-- Input and save a full description of the changes included in this new version
+- Run `git tag -a v[version_number]` (e.g. `git tag -a v2.0.0`)
+- Input and save your pull request's changelog
 - Run `git push origin v[version_number]` to push the tagged release to your fork
 - Check the tagged release on your fork to make sure everything looks good
 - Run `git push upstream v[version_number]` to push the tagged release to the official repository
 
 ## Publish a `beta` tag of the new release to `npm`
-- `cd` to the top level directory of the repository
 - Checkout the tagged release that you intend to publish
 	- `git checkout v[version_number]`
 	- `git` should report that you are now in a "detached HEAD" state
