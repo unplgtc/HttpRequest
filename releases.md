@@ -21,19 +21,22 @@ _If you've made a change to an Unapologetic package which requires a new release
 ## Publish a `beta` tag of the new release to `npm`
 - `cd` to the top level directory of the repository
 - Checkout the tagged release that you intend to publish
-    - `git checkout v[version_number]`
-    - `git` should report that you are now in a "detached HEAD" state
+	- `git checkout v[version_number]`
+	- `git` should report that you are now in a "detached HEAD" state
 - Dry run the publish command
-    - `npm publish --tag beta --dry-run`
+	- `npm publish --tag beta --dry-run`
 - Verify the dry run data looks accurate to what you intend to publish
 - Run the publish command to push the beta release to the `unplgtc` `npm` registry
-    - `npm publish --tag beta`
+	- If this is the first time the package is being published, and you want to publish it publicly:
+		- `npm publish --tag beta --access=public`
+	- If this is not the first time publishing, or you want to publish it privately (private packages require a paid `npm` account):
+	    - `npm publish --tag beta`
 - Check yourself back into `master`
-    - `git checkout master`
+	- `git checkout master`
 
 ## Update the `latest` tag of the package to match the `beta` release on `npm`
 - Once your `beta` version is ready for production, we can update the package's `latest` tag to use your release
 - Run `npm dist-tag ls` and make sure you see the correct `beta` tag and version listed
 - Run `npm dist-tag add @unplgtc/[package-name]@[beta_version] latest`
-    - (e.g. `npm dist-tag add @unplgtc/http-request@2.0.0 latest` to update the `latest` tag of Unapologetic's `http-request` package to version `2.0.0`)
+	- (e.g. `npm dist-tag add @unplgtc/http-request@2.0.0 latest` to update the `latest` tag of Unapologetic's `http-request` package to version `2.0.0`)
 - Run `npm dist-tag ls` again and make sure the versions of the `latest` and `beta` tags now match up
