@@ -5,9 +5,11 @@
 
 ### Fluent HTTP request executor for Node applications
 
-HttpRequest is a simple Node HTTP client which implements a [fluid interface](https://en.wikipedia.org/wiki/Fluent_interface) to build and send requests. HttpRequest Objects can be built in a number of different ways, including building and sending them immediately or building them over time and sending after all requires pieces have been assembled. HttpRequest encourages thinking of requests as Objects rather than actions: an HttpRequest Object holds its payload internally and can send it at any time — immediately or later on. This is a subtle but important distinction from other HTTP clients which expect a completed payload to be passed into a function call for instant execution.
+HttpRequest is a simple Node HTTP client which implements a [fluid interface](https://en.wikipedia.org/wiki/Fluent_interface) to build and send requests. HttpRequest Objects can be built in a number of different ways, including building and sending them immediately or building them over time and sending after all required pieces have been assembled. HttpRequest encourages thinking of requests as Objects rather than actions: an HttpRequest Object holds its payload internally and can send it at any time — immediately or later on. This is a subtle but important distinction from other HTTP clients which expect a completed payload to be passed into a function call for instant execution.
 
 HttpRequest Objects can be reused to fire the same request multiple time in a row, or to tweak a few request fields for different requests while persisting common values. They can be passed between functions and triggered by any of them without needing a particular function to deal with execution details. The fluid interface allows building HttpRequests with a chained syntax that is clear and concise.
+
+HttpRequest also supports batching requests via the `HttpRequest.batch()` function. This function will return a new BatchRequest object, which is slightly different than a standard HttpRequest in functionality. BatchRequest objects are explained in further detail below.
 
 ## Usage
 
@@ -183,6 +185,81 @@ var req = HttpRequest.create()
 console.log(req.payload);
 // { url: 'some_url' }
 ```
+
+## Batching and Throttling Requests
+
+Requests can be grouped together into a batch using the `HttpRequest.batch('some_id')` function. Batches are automatically created when a new ID is used, and further requests can be added to the same batch by using the same ID in their creation call. A batch remains open for a default of 50 milliseconds before being automatically executed, a process which fires off all requests in the batch and then deletes the batch.
+
+Batched requests support throttling via a `.throttle(<milliseconds>)` function. Whatever millisecond value is given will be used as a delay between the execution of each request in the batch. This functionality can help when dealing with an API that has strict rate limits. In the example below, two requests are created in a batch, and throttled so that they are executed 1 second apart from each other.
+
+```js
+const req1 = HttpRequest.batch('some_id')
+	.throttle(1000)
+	.build({url: 'some_url', json: true})
+	.get();
+
+const req2 = HttpRequest.batch('some_id')
+	.throttle(1000)
+	.build({url: 'some_url', json: true})
+	.get();
+
+const res1 = await req1,
+      res2 = await req2;
+```
+
+It's worth noting that the throttle value is global for a batch. Technically you only need to call `throttle()` on one of the requests in your batch for it to be set for all of them. Calling throttle on different requests and passing different values will result in the last value being used for all requests.
+
+If you don't call `throttle()` on any requests in a batch then all requests will be executed concurrently via `Promise.all()` when the batch is executed.
+
+```js
+const req1 = HttpRequest.batch('some_id')
+	.build({url: 'some_url', json: true})
+	.get();
+
+const req2 = HttpRequest.batch('some_id')
+	.build({url: 'some_url', json: true})
+	.get();
+
+const res1 = await req1, // Executed concurrently
+      res2 = await req2; // Executed concurrently
+```
+
+For batched requests the `.get()`, `.post()`, `.put()`, and `.delete()` functions do *not* immediately invoke the request. Instead, those functions simply set the method option for their request. When the batch is executed the specified method will be used for each request. Batch execution occurs automatically 50 milliseconds after the last request is added. If you don't want to or can't easily determine which request is the last one, HttpRequest will do it for you based on no more requests being added. Each time a request is added the 50 millisecond clock resets.
+
+The `stall()` function can be used to set the amount of time before a batch is automatically executed. If 50 milliseconds is too little time or too much time then you can chain a `.stall()` command to raise or lower the value for that batch.
+
+```js
+const req1 = HttpRequest.batch('some_id')
+	.stall(5000)
+	.throttle(1000)
+	.build({url: 'some_url', json: true})
+	.get();
+
+const req2 = HttpRequest.batch('some_id')
+	.build({url: 'some_url', json: true})
+	.get();
+
+const res1 = await req1, // Will execute after 5 seconds
+      res2 = await req2; // Will execute after 6 seconds (1 second throttle after the 5 second stall)
+```
+
+If you know when your batch is ready to execute and wish to invoke all requests immediately after adding the final one, you can do so by passing `true` to the method command of your final request.
+
+```js
+const req1 = HttpRequest.batch('some_id')
+	.throttle(1000)
+	.build({url: 'some_url', json: true})
+	.get();
+
+const req2 = HttpRequest.batch('some_id')
+	.build({url: 'some_url', json: true})
+	.get(true); // Immediately executes the batch
+
+const res1 = await req1,
+      res2 = await req2;
+```
+
+Under the hood, `HttpRequest.batch()` returns a `BatchRequest` object rather than an `HttpRequest` object. That said, both `BatchRequest` and `HttpRequest` are prototype-chained to the same `HttpRequestBase` object. In other words, `BatchRequest` has an identical interface to `HttpRequest` for adding values to the request object. The only differences are the presence of `.batch()` on `HttpRequest`, the addition of `.throttle()` and `.stall()` on `BatchRequest`, and the altered behavior of `.get()`, `.post()`, `.put()`, and `.delete()` in that they do not immediately execute `BatchRequest`s (unless `true` is passed to any of them).
 
 ## Further Documentation
 
