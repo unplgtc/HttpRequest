@@ -1,9 +1,7 @@
-'use strict';
-
-const BatchRequest = require('./BatchRequest'),
-      HttpRequestBase = require('./HttpRequestBase'),
-      rp = require('request-promise-native'),
-      StandardError = require('@unplgtc/standard-error');
+import axios from 'axios';
+import BatchRequest from './BatchRequest.js';
+import HttpRequestBase from './HttpRequestBase.js';
+import StandardError from '@unplgtc/standard-error';
 
 const batchRequests = {};
 
@@ -19,6 +17,10 @@ const HttpRequest = {
 	batch(id) {
 		const batchRequest = batchRequests[id] ||
 			(batchRequests[id] = Object.create(BatchRequest));
+
+		if (batchRequest.executing) {
+			throw new Error(StandardError.BatchRequest_403().message);
+		}
 
 		return batchRequest.addRequest(this.batchCleaner(id));
 	},
@@ -46,20 +48,40 @@ const HttpRequest = {
 	},
 
 	execute: async function(method, payload = this.payload) {
-		if (!Object.keys(payload).length || !payload.url) {
+		if (!payload?.url) {
 			return Promise.reject(StandardError.HttpRequest_400());
 		}
-		return this.validator
-		       ? this.validator(await rp[method](payload))
-		       : rp[method](payload);
+
+		if (payload.resolveWithFullResponse) {
+			delete payload.resolveWithFullResponse;
+
+			return this.validator
+				? this.validator(await axios({ ...payload, method }))
+				: axios({ ...payload, method });
+
+		} else {
+			let resErr;
+			const res = await axios({ ...payload, method })
+				.catch(err => (resErr = err));
+
+			if (resErr) {
+				return Promise.reject(resErr);
+
+			} else {
+				return this.validator
+					? this.validator(res?.data)
+					: res?.data;
+			}
+		}
 	}
 }
 
 StandardError.add([
-	{code: 'HttpRequest_400', domain: 'HttpRequest', title: 'Bad Request', message: 'Cannot execute HttpRequest with empty payload or url'}
+	{ code: 'HttpRequest_400', domain: 'HttpRequest', title: 'Bad Request', message: 'HTTP Request missing url' },
+	{ code: 'BatchRequest_403', domain: 'BatchRequest', title: 'Forbidden', message: 'Batch is already executing' }
 ]);
 
 // Delegate HttpRequest -> HttpRequestBase
 Object.setPrototypeOf(HttpRequest, HttpRequestBase);
 
-module.exports = HttpRequest;
+export default HttpRequest;
