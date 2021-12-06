@@ -1,76 +1,84 @@
-'use strict';
+import HttpRequest from './../src/HttpRequest.js';
+import { jest } from '@jest/globals';
+import StandardError from '@unplgtc/standard-error';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 
-const HttpRequest = require('./../src/HttpRequest');
-const rp = require('request-promise-native');
-const StandardError = require('@unplgtc/standard-error');
+const mock = new MockAdapter(axios);
 
-jest.mock('request-promise-native');
+const url = (id) => `test_url_${id}`;
 
-const simpleGetDeletePayload = {
-	url: 'test_url',
+const simpleGetDeletePayload = (id) => ({
+	url: url(id),
 	headers: {
-		header1: 'test_header'
+		header1: `test_header_${id}`
 	},
-	json: true,
+	responseType: 'json',
 	resolveWithFullResponse: false
-}
+});
 
-const simplePutPostPayload = {
-	url: 'test_url',
+const simplePutPostPayload = (id) => ({
+	url: url(id),
 	headers: {
-		header1: 'test_header'
+		header1: `test_header_${id}`
 	},
 	body: {
-		testing: true
+		testing: id
 	},
-	json: true,
+	responseType: 'json',
 	resolveWithFullResponse: false
-}
+});
 
-const simpleMockedResponse = {
-	testing: true
-}
-
-const simpleMockedResponse2 = {
-	testing2: true
-}
+const simpleMockedResponse = (id, seed) => ({
+	testing: (seed ? `${id}_${seed}` : id)
+})
 
 test('Can create and execute a batch request with one request', async() => {
 	// Setup
-	const id = 'id_1';
-	rp.post.mockResolvedValue(simpleMockedResponse);
+	const id = 'id_1',
+	      payload = simplePutPostPayload(id);
+
+	mock.reset();
+	mock.onPost(url(id)).reply(200, simpleMockedResponse(id));
 
 	const req = HttpRequest.batch(id)
-		.url(simplePutPostPayload.url)
-		.header('header1', simplePutPostPayload.headers.header1)
-		.body(simplePutPostPayload.body)
-		.json(simplePutPostPayload.json);
+		.url(payload.url)
+		.header('header1', payload.headers.header1)
+		.body(payload.body)
+		.json();
 
 	// Execute
-	const res = await req.post();
+	const res = await req.post(true);
 
 	// Test
-	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res).toBe(simpleMockedResponse);
+	const mockedPosts = mock.history.post.filter(it => it.url === url(id));
+
+	expect(mockedPosts.length).toBe(1);
+	expect(mockedPosts[0].data).toStrictEqual(JSON.stringify(payload.body));
+	expect(res).toStrictEqual(simpleMockedResponse(id));
 });
 
 test('Can create and execute a batch request with multiple requests', async() => {
 	// Setup
-	const id = 'id_2';
-	rp.get.mockResolvedValue(simpleMockedResponse);
-	rp.post.mockResolvedValue(simpleMockedResponse2);
+	const id = 'id_2',
+	      payload1 = simpleGetDeletePayload(id),
+	      payload2 = simplePutPostPayload(id);
+
+	mock.reset();
+	mock.onGet(url(id)).reply(200, simpleMockedResponse(id, 'get'));
+	mock.onPost(url(id)).reply(200, simpleMockedResponse(id, 'post'));
 
 	const req1 = HttpRequest.batch(id)
-		.url(simpleGetDeletePayload.url)
-		.header('header1', simpleGetDeletePayload.headers.header1)
-		.json(simpleGetDeletePayload.json)
+		.url(payload1.url)
+		.header('header1', payload1.headers.header1)
+		.json()
 		.get();
 
 	const req2 = HttpRequest.batch(id)
-		.url(simplePutPostPayload.url)
-		.header('header1', simplePutPostPayload.headers.header1)
-		.body(simplePutPostPayload.body)
-		.json(simplePutPostPayload.json)
+		.url(payload2.url)
+		.header('header1', payload2.headers.header1)
+		.body(payload2.body)
+		.json()
 		.post();
 
 	// Execute
@@ -78,17 +86,23 @@ test('Can create and execute a batch request with multiple requests', async() =>
 	const res2 = await req2;
 
 	// Test
-	expect(rp.get).toHaveBeenCalledWith(simpleGetDeletePayload);
-	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res1).toBe(simpleMockedResponse);
-	expect(res2).toBe(simpleMockedResponse2);
+	const mockedGets = mock.history.get.filter(it => it.url === url(id));
+	expect(mockedGets.length).toBe(1);
+	expect(mockedGets[0].url).toBe(payload1.url);
+	expect(res1).toStrictEqual(simpleMockedResponse(id, 'get'));
+
+	const mockedPosts = mock.history.post.filter(it => it.url === url(id));
+	expect(mockedPosts.length).toBe(1);
+	expect(mockedPosts[0].data).toStrictEqual(JSON.stringify(payload2.body));
+	expect(res2).toStrictEqual(simpleMockedResponse(id, 'post'));
 });
 
 test('Can create and execute a batch request with throttled requests', async() => {
 	// Setup
 	const id = 'id_3';
-	rp.get.mockResolvedValue(simpleMockedResponse);
-	rp.post.mockResolvedValue(simpleMockedResponse2);
+	mock.reset();
+	mock.onGet(url(id)).reply(200, simpleMockedResponse(id, 'get'));
+	mock.onPost(url(id)).reply(200, simpleMockedResponse(id, 'post'));
 
 	// Test
 	expect(HttpRequest.batchRequests[id]).toBe(undefined);
@@ -96,17 +110,17 @@ test('Can create and execute a batch request with throttled requests', async() =
 	// Setup
 	const req1 = HttpRequest.batch(id)
 		.throttle(50)
-		.url(simpleGetDeletePayload.url)
-		.header('header1', simpleGetDeletePayload.headers.header1)
-		.json(simpleGetDeletePayload.json)
+		.url(simpleGetDeletePayload(id).url)
+		.header('header1', simpleGetDeletePayload(id).headers.header1)
+		.json()
 		.get();
 
 	const req2 = HttpRequest.batch(id)
 		.throttle(50)
-		.url(simplePutPostPayload.url)
-		.header('header1', simplePutPostPayload.headers.header1)
-		.body(simplePutPostPayload.body)
-		.json(simplePutPostPayload.json)
+		.url(simplePutPostPayload(id).url)
+		.header('header1', simplePutPostPayload(id).headers.header1)
+		.body(simplePutPostPayload(id).body)
+		.json()
 		.post();
 
 	// Test
@@ -117,10 +131,15 @@ test('Can create and execute a batch request with throttled requests', async() =
 	const res2 = await req2;
 
 	// Test
-	expect(rp.get).toHaveBeenCalledWith(simpleGetDeletePayload);
-	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res1).toBe(simpleMockedResponse);
-	expect(res2).toBe(simpleMockedResponse2);
+	const mockedGets = mock.history.get.filter(it => it.url === url(id));
+	expect(mockedGets.length).toBe(1);
+	expect(mockedGets[0].url).toBe(simpleGetDeletePayload(id).url);
+	expect(res1).toStrictEqual(simpleMockedResponse(id, 'get'));
+
+	const mockedPosts = mock.history.post.filter(it => it.url === url(id));
+	expect(mockedPosts.length).toBe(1);
+	expect(mockedPosts[0].data).toStrictEqual(JSON.stringify(simplePutPostPayload(id).body));
+	expect(res2).toStrictEqual(simpleMockedResponse(id, 'post'));
 
 	// Delay by one clock cycle to allow HttpRequest to clean up the executed batch
 	await new Promise((resolve, reject) => {
@@ -132,31 +151,33 @@ test('Can create and execute a batch request with throttled requests', async() =
 test('StandardError returned when batch request is made without method', async() => {
 	// Setup
 	const id = 'id_4';
-	rp.get.mockResolvedValue(simpleMockedResponse);
-	rp.post.mockResolvedValue(simpleMockedResponse2);
+	mock.reset();
+	mock.onGet(url(id)).reply(200, simpleMockedResponse(id, 'get'));
+	mock.onPost(url(id)).reply(200, simpleMockedResponse(id, 'post'));
 
 	const req1 = HttpRequest.batch(id)
-		.url(simpleGetDeletePayload.url)
-		.header('header1', simpleGetDeletePayload.headers.header1)
-		.json(simpleGetDeletePayload.json)
+		.url(simpleGetDeletePayload(id).url)
+		.header('header1', simpleGetDeletePayload(id).headers.header1)
 		.get();
 
 	const req2 = HttpRequest.batch(id)
-		.url(simplePutPostPayload.url)
-		.header('header1', simplePutPostPayload.headers.header1)
-		.body(simplePutPostPayload.body)
-		.json(simplePutPostPayload.json)
+		.url(simplePutPostPayload(id).url)
+		.header('header1', simplePutPostPayload(id).headers.header1)
+		.body(simplePutPostPayload(id).body);
 
 	// Execute
+	let resErr;
 	const res1 = await req1;
 
-	let resErr;
 	const res2 = await req2.result
 		.catch((err) => { resErr = err });
 
 	// Test
-	expect(rp.get).toHaveBeenCalledWith(simpleGetDeletePayload);
-	expect(res1).toBe(simpleMockedResponse);
+	const mockedGets = mock.history.get.filter(it => it.url === url(id));
+	expect(mockedGets.length).toBe(1);
+	expect(mockedGets[0].url).toBe(simpleGetDeletePayload(id).url);
+	expect(res1).toStrictEqual(simpleMockedResponse(id, 'get'));
+
 	expect(resErr).toEqual(StandardError.BatchRequest_400());
 	expect(res2).toBe(undefined);
 });
@@ -164,6 +185,7 @@ test('StandardError returned when batch request is made without method', async()
 test('StandardError returned when batch request is made without url', async() => {
 	// Setup
 	const id = 'id_5';
+	mock.reset();
 
 	const req = HttpRequest.batch(id).get();
 
@@ -180,20 +202,19 @@ test('StandardError returned when batch request is made without url', async() =>
 test('Can immediately execute a batch request', async() => {
 	// Setup
 	const id = 'id_6';
-	rp.get.mockResolvedValue(simpleMockedResponse);
-	rp.post.mockResolvedValue(simpleMockedResponse2);
+	mock.reset();
+	mock.onGet(url(id)).reply(200, simpleMockedResponse(id, 'get'));
+	mock.onPost(url(id)).reply(200, simpleMockedResponse(id, 'post'));
 
 	const req1 = HttpRequest.batch(id)
-		.url(simpleGetDeletePayload.url)
-		.header('header1', simpleGetDeletePayload.headers.header1)
-		.json(simpleGetDeletePayload.json)
+		.url(simpleGetDeletePayload(id).url)
+		.header('header1', simpleGetDeletePayload(id).headers.header1)
 		.get();
 
 	const req2 = HttpRequest.batch(id)
-		.url(simplePutPostPayload.url)
-		.header('header1', simplePutPostPayload.headers.header1)
-		.body(simplePutPostPayload.body)
-		.json(simplePutPostPayload.json)
+		.url(simplePutPostPayload(id).url)
+		.header('header1', simplePutPostPayload(id).headers.header1)
+		.body(simplePutPostPayload(id).body)
 		.post(true);
 
 	// Execute
@@ -201,8 +222,13 @@ test('Can immediately execute a batch request', async() => {
 	const res2 = await req2;
 
 	// Test
-	expect(rp.get).toHaveBeenCalledWith(simpleGetDeletePayload);
-	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res1).toBe(simpleMockedResponse);
-	expect(res2).toBe(simpleMockedResponse2);
+	const mockedGets = mock.history.get.filter(it => it.url === url(id));
+	expect(mockedGets.length).toBe(1);
+	expect(mockedGets[0].url).toBe(simpleGetDeletePayload(id).url);
+	expect(res1).toStrictEqual(simpleMockedResponse(id, 'get'));
+
+	const mockedPosts = mock.history.post.filter(it => it.url === url(id));
+	expect(mockedPosts.length).toBe(1);
+	expect(mockedPosts[0].data).toStrictEqual(JSON.stringify(simplePutPostPayload(id).body));
+	expect(res2).toStrictEqual(simpleMockedResponse(id, 'post'));
 });

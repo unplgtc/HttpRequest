@@ -1,49 +1,50 @@
-'use strict';
+import HttpRequest from './../src/HttpRequest.js';
+import { jest } from '@jest/globals';
+import StandardError from '@unplgtc/standard-error';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 
-const HttpRequest = require('./../src/HttpRequest');
-const rp = require('request-promise-native');
-const StandardError = require('@unplgtc/standard-error');
+const mock = new MockAdapter(axios);
 
-jest.mock('request-promise-native');
+const url = 'test_url';
 
 const simpleGetDeletePayload = {
-	url: 'test_url',
+	url,
 	headers: {
 		header1: 'test_header'
 	},
-	json: true,
+	responseType: 'json',
 	resolveWithFullResponse: false
 };
 
 const simplePutPostPayload = {
-	url: 'test_url',
+	url,
 	headers: {
 		header1: 'test_header'
 	},
 	body: {
 		testing: true
 	},
-	json: true,
+	responseType: 'json',
 	resolveWithFullResponse: false
 };
 
 const resolveWithFullResponsePutPostPayload = {
-	url: 'test_url',
+	url,
 	headers: {
 		header1: 'test_header'
 	},
 	body: {
-		testing: true
+		testingFullResponse: true
 	},
-	json: true,
-	resolveWithFullResponse: true
+	responseType: 'json'
 };
 
 const payloadWithoutUrl = {
 	headers: {
 		header1: 'test_header'
 	},
-	json: true
+	responseType: 'json'
 };
 
 const simpleMockedResponse = {
@@ -51,9 +52,6 @@ const simpleMockedResponse = {
 };
 
 test('Can access the payload', async() => {
-	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
-
 	const req = Object.create(HttpRequest);
 	req.build(simpleGetDeletePayload);
 
@@ -63,7 +61,8 @@ test('Can access the payload', async() => {
 
 test('Can send a GET request', async() => {
 	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onGet(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.build(simpleGetDeletePayload);
@@ -72,13 +71,15 @@ test('Can send a GET request', async() => {
 	const res = await req.get();
 
 	// Test
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.get.length).toBe(1);
+	expect(mock.history.get[0].url).toBe(simpleGetDeletePayload.url);
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can send a POST request', async() => {
 	// Setup
-	rp.post.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onPost(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.build(simplePutPostPayload);
@@ -87,13 +88,15 @@ test('Can send a POST request', async() => {
 	const res = await req.post();
 
 	// Test
-	expect(rp.post).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.post.length).toBe(1);
+	expect(mock.history.post[0].data).toStrictEqual(JSON.stringify(simplePutPostPayload.body));
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can send a PUT request', async() => {
 	// Setup
-	rp.put.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onPut(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.build(simplePutPostPayload);
@@ -102,13 +105,15 @@ test('Can send a PUT request', async() => {
 	const res = await req.put();
 
 	// Test
-	expect(rp.put).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.put.length).toBe(1);
+	expect(mock.history.put[0].data).toStrictEqual(JSON.stringify(simplePutPostPayload.body));
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can send a DELETE request', async() => {
 	// Setup
-	rp.delete.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onDelete(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.build(simpleGetDeletePayload);
@@ -117,13 +122,15 @@ test('Can send a DELETE request', async() => {
 	const res = await req.delete();
 
 	// Test
-	expect(rp.delete).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.delete.length).toBe(1);
+	expect(mock.history.delete[0].url).toBe(simpleGetDeletePayload.url);
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can build and send a request in one line', async() => {
 	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onGet(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 
@@ -131,12 +138,15 @@ test('Can build and send a request in one line', async() => {
 	const res = await req.build(simpleGetDeletePayload).get();
 
 	// Test
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.get.length).toBe(1);
+	expect(mock.history.get[0].url).toBe(simpleGetDeletePayload.url);
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('StandardError returned when request is made with empty payload', async() => {
 	// Setup
+	mock.reset();
+
 	const req = Object.create(HttpRequest);
 	req.build();
 
@@ -146,13 +156,15 @@ test('StandardError returned when request is made with empty payload', async() =
 		.catch((err) => { resErr = err });
 
 	// Test
-	expect(rp.get).not.toHaveBeenCalled();
+	expect(mock.history.get.length).toBe(0);
 	expect(resErr).toEqual(StandardError.HttpRequest_400());
 	expect(res).toBe(undefined);
 });
 
 test('StandardError returned when request is made with empty url', async() => {
 	// Setup
+	mock.reset();
+
 	const req = Object.create(HttpRequest);
 	req.build(payloadWithoutUrl);
 
@@ -162,14 +174,15 @@ test('StandardError returned when request is made with empty url', async() => {
 		.catch((err) => { resErr = err });
 
 	// Test
-	expect(rp.get).not.toHaveBeenCalled();
+	expect(mock.history.get.length).toBe(0);
 	expect(resErr).toEqual(StandardError.HttpRequest_400());
 	expect(res).toBe(undefined);
 });
 
 test('Can execute a request directly', async() => {
 	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onGet(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.build(simpleGetDeletePayload);
@@ -178,128 +191,122 @@ test('Can execute a request directly', async() => {
 	const res = await req.execute('get');
 
 	// Test
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.get.length).toBe(1);
+	expect(mock.history.get[0].url).toBe(simpleGetDeletePayload.url);
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can assemble a request piece by piece', async() => {
 	// Setup
-	rp.post.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onPost(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.url(simplePutPostPayload.url);
 	req.headers(simplePutPostPayload.headers);
 	req.body(simplePutPostPayload.body);
-	req.json(simplePutPostPayload.json);
+	req.json();
 
 	// Execute
 	const res = await req.post();
 
 	// Test
-	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.post.length).toBe(1);
+	expect(mock.history.post[0].data).toStrictEqual(JSON.stringify(simplePutPostPayload.body));
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can chain the piece by piece assembly of a request', async() => {
 	// Setup
-	rp.post.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onPost(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.url(simplePutPostPayload.url)
 	   .header('header1', simplePutPostPayload.headers.header1)
 	   .body(simplePutPostPayload.body)
-	   .json(simplePutPostPayload.json);
-
-	// Execute
-	const res = await req.post();
-
-	// Test
-	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res).toBe(simpleMockedResponse);
-});
-
-test('resolveWithFullResponse and json can be set to true by not passing values', async() => {
-	// Setup
-	rp.post.mockResolvedValue(simpleMockedResponse);
-
-	const req = Object.create(HttpRequest);
-	req.url(simplePutPostPayload.url)
-	   .header('header1', simplePutPostPayload.headers.header1)
-	   .body(simplePutPostPayload.body)
-	   .resolveWithFullResponse()
 	   .json();
 
 	// Execute
 	const res = await req.post();
 
 	// Test
-	expect(rp.post).toHaveBeenCalledWith(resolveWithFullResponsePutPostPayload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.post.length).toBe(1);
+	expect(mock.history.post[0].data).toStrictEqual(JSON.stringify(simplePutPostPayload.body));
+	expect(res).toStrictEqual(simpleMockedResponse);
+});
+
+test('resolveWithFullResponse can be set to true by not passing value', async() => {
+	// Setup
+	mock.reset();
+	mock.onPost(url).reply(200, simpleMockedResponse);
+
+	const req = Object.create(HttpRequest);
+	req.url(resolveWithFullResponsePutPostPayload.url)
+	   .header('header1', resolveWithFullResponsePutPostPayload.headers.header1)
+	   .body(resolveWithFullResponsePutPostPayload.body)
+	   .json()
+	   .resolveWithFullResponse();
+
+	// Execute
+	const res = await req.post();
+
+	// Test
+	expect(mock.history.post.length).toBe(1);
+	expect(mock.history.post[0].data).toStrictEqual(JSON.stringify(resolveWithFullResponsePutPostPayload.body));
+	expect(res.status).toBe(200);
+	expect(res.data).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can chain creation, assembly, and execution of an HttpRequest', async() => {
 	// Setup
-	rp.post.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onPost(url).reply(200, simpleMockedResponse);
 
 	// Execute
 	const res = await HttpRequest.create()
-	                           .url(simplePutPostPayload.url)
-	                           .headers(simplePutPostPayload.headers)
-	                           .body(simplePutPostPayload.body)
-	                           .json(simplePutPostPayload.json)
-	                           .post();
+		.url(simplePutPostPayload.url)
+		.headers(simplePutPostPayload.headers)
+		.body(simplePutPostPayload.body)
+		.json()
+		.post();
 
 	// Test
-	expect(rp.post).toHaveBeenCalledWith(simplePutPostPayload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.post.length).toBe(1);
+	expect(mock.history.post[0].data).toStrictEqual(JSON.stringify(simplePutPostPayload.body));
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can send a GET request with a query string', async() => {
 	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onGet(url).reply(200, simpleMockedResponse);
+
+	const params = {
+		page: 4,
+		query: 'some string'
+	};
 
 	const req = Object.create(HttpRequest);
 	req.build({
 		...simpleGetDeletePayload,
-		qs: {
-			query: 'some string',
-			page: 4
-		}
+		params
 	});
 
 	// Execute
 	const res = await req.get();
 
 	// Test
-	expect(req.payload.qs).toEqual({
-		query: 'some string',
-		page: 4
-	});
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
-});
-
-test('Has a proper default payload value for "resolveWithFullResponse"', async() => {
-	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
-	
-	const {resolveWithFullResponse, ...reqPayload} = simpleGetDeletePayload;
-
-	const req = Object.create(HttpRequest);
-	req.build(reqPayload);
-
-	// Execute
-	const res = await req.get();
-
-	// Test
-	expect(req.payload.resolveWithFullResponse).toBe(false);
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(req.payload.params).toStrictEqual(params);
+	expect(mock.history.get.length).toBe(1);
+	expect(JSON.stringify(mock.history.get[0].params)).toStrictEqual(JSON.stringify(params));
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can send a request with a timeout', async() => {
 	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onGet(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.build({
@@ -312,32 +319,16 @@ test('Can send a request with a timeout', async() => {
 
 	// Test
 	expect(req.payload.timeout).toBe(3000);
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
-});
-
-test('Can send a request with "resolveWithFullResponse" flag', async() => {
-	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
-
-	const req = Object.create(HttpRequest);
-	req.build({
-		...simpleGetDeletePayload,
-		resolveWithFullResponse: false
-	});
-
-	// Execute
-	const res = await req.get();
-
-	// Test
-	expect(req.payload.resolveWithFullResponse).toBe(false);
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.get.length).toBe(1);
+	expect(mock.history.get[0].url).toBe(simpleGetDeletePayload.url);
+	expect(mock.history.get[0].timeout).toBe(3000);
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can send a GET request with additional option arguments', async() => {
 	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onGet(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.build({
@@ -350,20 +341,23 @@ test('Can send a GET request with additional option arguments', async() => {
 
 	// Test
 	expect(req.payload.someTestingOption).toBe(true);
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.get.length).toBe(1);
+	expect(mock.history.get[0].url).toBe(simpleGetDeletePayload.url);
+	expect(mock.history.get[0].someTestingOption).toBe(true);
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Can edit a POST request optional parameter after creation', async() => {
 	// Setup
-	rp.post.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onPost(url).reply(200, simpleMockedResponse);
 
 	const req = Object.create(HttpRequest);
 	req.build({
 		...simplePutPostPayload,
 		myTestOption: 1234
 	});
-	
+
 	req.option('myTestOption', 4321);
 
 	// Execute
@@ -371,13 +365,16 @@ test('Can edit a POST request optional parameter after creation', async() => {
 
 	// Test
 	expect(req.payload.myTestOption).toBe(4321);
-	expect(rp.post).toHaveBeenCalledWith(req.payload);
-	expect(res).toBe(simpleMockedResponse);
+	expect(mock.history.post.length).toBe(1);
+	expect(mock.history.post[0].data).toStrictEqual(JSON.stringify(simplePutPostPayload.body));
+	expect(mock.history.post[0].myTestOption).toBe(4321);
+	expect(res).toStrictEqual(simpleMockedResponse);
 });
 
 test('Will call validation function with resolved response data', async() => {
 	// Setup
-	rp.get.mockResolvedValue(simpleMockedResponse);
+	mock.reset();
+	mock.onGet(url).reply(200, simpleMockedResponse);
 
 	const validationFunction = jest.fn(data => {
 		if (!data.testing) {
@@ -396,7 +393,8 @@ test('Will call validation function with resolved response data', async() => {
 	const res = await req.get();
 
 	// Test
-	expect(rp.get).toHaveBeenCalledWith(req.payload);
+	expect(mock.history.get.length).toBe(1);
+	expect(mock.history.get[0].url).toBe(req.payload.url);
+	expect(res).toStrictEqual(simpleMockedResponse);
 	expect(validationFunction).toHaveBeenCalledWith(simpleMockedResponse);
-	expect(res).toBe(simpleMockedResponse);
 });

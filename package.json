@@ -2,27 +2,30 @@
   "name": "@unplgtc/http-request",
   "version": "3.0.0",
   "description": "Fluent HTTP request executor for Node applications",
-  "main": "src/HttpRequest.js",
+  "type": "module",
+  "exports": "./src/HttpRequest.js",
+  "engines": {
+    "node": ">=14.13.1 || >=16.0.0"
+  },
   "scripts": {
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/unplgtc/HttpRequest.git"
   },
-  "author": "Alex Guyot <guyot@unapologetic.io> (https://unapologetic.io)",
+  "author": "Alex Guyot <alex@unapologetic.io> (https://unapologetic.io)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/unplgtc/HttpRequest/issues"
   },
   "homepage": "https://github.com/unplgtc/HttpRequest#readme",
   "devDependencies": {
-    "jest": "^23.4.2"
+    "axios-mock-adapter": "^1.20.0",
+    "jest": "^27.3.1"
   },
   "dependencies": {
-    "@unplgtc/cblogger": "1.0.2",
-    "@unplgtc/standard-error": "1.0.0",
-    "request": "^2.88.0",
-    "request-promise-native": "^1.0.5"
+    "@unplgtc/standard-error": "2.0.0",
+    "axios": "^0.24.0"
   }
 }
