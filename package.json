@@ -1,6 +1,6 @@
 {
   "name": "@unplgtc/http-request",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Fluent HTTP request executor for Node applications",
   "type": "module",
   "exports": "./src/HttpRequest.js",
