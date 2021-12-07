@@ -1,6 +1,11 @@
 import HttpRequestBase from './HttpRequestBase.js';
 import axios from 'axios';
-import StandardError from '@unplgtc/standard-error';
+import { createError } from '@unplgtc/standard-error';
+
+const MissingUrlOrMethodError = createError({
+	name: 'MissingUrlOrMethodError',
+	message: 'Cannot execute a BatchRequest with no URL or method'
+});
 
 let executionTimer;
 
@@ -154,7 +159,7 @@ const BatchRequest = {
 
 	executeOne: async function(request) {
 		if (!request?.payload?.url || !request.method) {
-			return request.reject(StandardError.BatchRequest_400());
+			return request.reject(new MissingUrlOrMethodError());
 		}
 
 		if (request.payload.resolveWithFullResponse) {
@@ -184,10 +189,6 @@ const BatchRequest = {
 		}
 	}
 }
-
-StandardError.add([
-	{ code: 'BatchRequest_400', domain: 'HttpRequest', title: 'Bad Request', message: 'HTTP request missing url or method' }
-]);
 
 // Delegate BatchRequest -> HttpRequestBase
 Object.setPrototypeOf(BatchRequest, HttpRequestBase);
