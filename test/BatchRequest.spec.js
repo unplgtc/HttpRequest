@@ -1,7 +1,8 @@
+import axios from 'axios';
+import Errors from '@unplgtc/standard-error';
+const { MissingUrlOrMethodError } = Errors;
 import HttpRequest from './../src/HttpRequest.js';
 import { jest } from '@jest/globals';
-import StandardError from '@unplgtc/standard-error';
-import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 const mock = new MockAdapter(axios);
@@ -178,7 +179,7 @@ test('StandardError returned when batch request is made without method', async()
 	expect(mockedGets[0].url).toBe(simpleGetDeletePayload(id).url);
 	expect(res1).toStrictEqual(simpleMockedResponse(id, 'get'));
 
-	expect(resErr).toEqual(StandardError.BatchRequest_400());
+	expect(resErr instanceof MissingUrlOrMethodError).toBe(true);
 	expect(res2).toBe(undefined);
 });
 
@@ -195,7 +196,7 @@ test('StandardError returned when batch request is made without url', async() =>
 		.catch((err) => { resErr = err });
 
 	// Test
-	expect(resErr).toEqual(StandardError.BatchRequest_400());
+	expect(resErr instanceof MissingUrlOrMethodError).toBe(true);
 	expect(res).toBe(undefined);
 });
 

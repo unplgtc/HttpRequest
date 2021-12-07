@@ -1,7 +1,18 @@
 import axios from 'axios';
 import BatchRequest from './BatchRequest.js';
 import HttpRequestBase from './HttpRequestBase.js';
-import StandardError from '@unplgtc/standard-error';
+import { createErrors } from '@unplgtc/standard-error';
+
+const [ MissingUrlError, BatchAlreadyExecutingError ] = createErrors([
+	{
+		name: 'MissingUrlError',
+		message: 'Cannot execute an HttpRequest with no URL'
+	},
+	{
+		name: 'BatchAlreadyExecutingError',
+		message: 'Cannot execute a BatchRequest that is already being executed (make sure you aren\'t passing `true` to the executor functions more than once for the same batch, or try increasing the `stall` timeout)'
+	}
+]);
 
 const batchRequests = {};
 
@@ -19,7 +30,7 @@ const HttpRequest = {
 			(batchRequests[id] = Object.create(BatchRequest));
 
 		if (batchRequest.executing) {
-			throw new Error(StandardError.BatchRequest_403().message);
+			throw new BatchAlreadyExecutingError();
 		}
 
 		return batchRequest.addRequest(this.batchCleaner(id));
@@ -49,7 +60,7 @@ const HttpRequest = {
 
 	execute: async function(method, payload = this.payload) {
 		if (!payload?.url) {
-			return Promise.reject(StandardError.HttpRequest_400());
+			return Promise.reject(new MissingUrlError());
 		}
 
 		if (payload.resolveWithFullResponse) {
@@ -75,11 +86,6 @@ const HttpRequest = {
 		}
 	}
 }
-
-StandardError.add([
-	{ code: 'HttpRequest_400', domain: 'HttpRequest', title: 'Bad Request', message: 'HTTP Request missing url' },
-	{ code: 'BatchRequest_403', domain: 'BatchRequest', title: 'Forbidden', message: 'Batch is already executing' }
-]);
 
 // Delegate HttpRequest -> HttpRequestBase
 Object.setPrototypeOf(HttpRequest, HttpRequestBase);

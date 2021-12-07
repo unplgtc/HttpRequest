@@ -1,7 +1,8 @@
+import axios from 'axios';
+import Errors from '@unplgtc/standard-error';
+const { MissingUrlError } = Errors;
 import HttpRequest from './../src/HttpRequest.js';
 import { jest } from '@jest/globals';
-import StandardError from '@unplgtc/standard-error';
-import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 const mock = new MockAdapter(axios);
@@ -157,7 +158,7 @@ test('StandardError returned when request is made with empty payload', async() =
 
 	// Test
 	expect(mock.history.get.length).toBe(0);
-	expect(resErr).toEqual(StandardError.HttpRequest_400());
+	expect(resErr instanceof MissingUrlError).toBe(true);
 	expect(res).toBe(undefined);
 });
 
@@ -175,7 +176,7 @@ test('StandardError returned when request is made with empty url', async() => {
 
 	// Test
 	expect(mock.history.get.length).toBe(0);
-	expect(resErr).toEqual(StandardError.HttpRequest_400());
+	expect(resErr instanceof MissingUrlError).toBe(true);
 	expect(res).toBe(undefined);
 });
 
