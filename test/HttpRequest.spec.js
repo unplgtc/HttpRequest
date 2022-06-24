@@ -1,6 +1,6 @@
 import axios from 'axios';
 import Errors from '@unplgtc/standard-error';
-const { MissingUrlError } = Errors;
+const { MissingUrlError } = Errors.HttpRequest;
 import HttpRequest from './../src/HttpRequest.js';
 import { jest } from '@jest/globals';
 import MockAdapter from 'axios-mock-adapter';
