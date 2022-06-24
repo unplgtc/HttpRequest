@@ -1,7 +1,12 @@
 import axios from 'axios';
 import BatchRequest from './BatchRequest.js';
-import HttpRequestBase from './HttpRequestBase.js';
 import { createErrors } from '@unplgtc/standard-error';
+import HttpRequestBase from './HttpRequestBase.js';
+import http from 'http';
+import https from 'https';
+
+axios.defaults.httpAgent = new http.Agent({ keepAlive: true });
+axios.defaults.httpsAgent = new https.Agent({ keepAlive: true });
 
 const [ MissingUrlError, BatchAlreadyExecutingError ] = createErrors([
 	{
@@ -61,6 +66,11 @@ const HttpRequest = {
 	execute: async function(method, payload = this.payload) {
 		if (!payload?.url) {
 			return Promise.reject(new MissingUrlError());
+		}
+
+		const reqId = payload.requestId || this._rTracer?.id();
+		if (reqId) {
+			payload.headers = Object.assign((payload.headers || {}), { [this._request_id_header]: reqId });
 		}
 
 		if (payload.resolveWithFullResponse) {

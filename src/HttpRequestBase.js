@@ -114,4 +114,10 @@ const HttpRequestBase = {
 	}
 }
 
+let rTracer;
+try { rTracer = await import('cls-rtracer'); } catch (err) {}
+
+HttpRequestBase._rTracer = rTracer;
+HttpRequestBase._request_id_header = 'x-request-id';
+
 export default HttpRequestBase;

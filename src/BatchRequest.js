@@ -1,6 +1,6 @@
-import HttpRequestBase from './HttpRequestBase.js';
 import axios from 'axios';
 import { createError } from '@unplgtc/standard-error';
+import HttpRequestBase from './HttpRequestBase.js';
 
 const MissingUrlOrMethodError = createError({
 	name: 'MissingUrlOrMethodError',
