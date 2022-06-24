@@ -263,6 +263,33 @@ const res1 = await req1,
 
 Under the hood, `HttpRequest.batch()` returns a `BatchRequest` object rather than an `HttpRequest` object. That said, both `BatchRequest` and `HttpRequest` are prototype-chained to the same `HttpRequestBase` object. In other words, `BatchRequest` has an identical interface to `HttpRequest` for adding values to the request object. The only differences are the presence of `.batch()` on `HttpRequest`, the addition of `.throttle()` and `.stall()` on `BatchRequest`, and the altered behavior of `.get()`, `.post()`, `.put()`, and `.delete()` in that they do not immediately execute `BatchRequest`s (unless `true` is passed to any of them).
 
+## Built-In CLS rTracer Support
+
+If you track request IDs using [CLS rTracer](https://github.com/puzpuzpuz/cls-rtracer), HttpRequest will automatically detect and append your request IDs to all executed http requests. This allows you to persist request IDs throughout inter-platform API calls with zero configuration.
+
+By default, HttpRequest uses the header `x-request-id` when passing request IDs. This is the same default used by the CLS rTracer project. If you need to use a different header, you can manually override it for all of your http requests at once by setting the `_request_id_header` property on the main HttpRequest object:
+
+```js
+HttpRequest._request_id_header = 'x-some-header';
+```
+
+You can also manually pass request IDs into individual HttpRequest instances using the `requestId` option. This allows you to easily override IDs from rTracer on a request-by-request basis, which may be useful for testing or other edge-case purposes:
+
+```js
+const res = await HttpRequest.create()
+	.url('some_url')
+	.option('requestId', 'my-request-id')
+	.get();
+```
+
+The http request executed by the example above would include a header with the key `x-request-id` and the value `my-request-id`.
+
+Request ID persistence is enabled automatically if rTracer is detected as a peer dependency in your project. If you want to disable this feature despite rTracer being installed, just add the following code somewhere in your project:
+
+```js
+delete HttpRequest._rTracer;
+```
+
 ## Further Documentation
 
 Please refer to the [`axios` documentation](https://www.npmjs.com/package/axios) for further specifications such as the response data format and additional optional fields. Everything with the response and options will be the same except the following:
