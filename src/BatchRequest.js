@@ -4,6 +4,8 @@ import HttpRequestBase from './HttpRequestBase.js';
 
 const MissingUrlOrMethodError = createError({
 	name: 'MissingUrlOrMethodError',
+	namespace: 'HttpRequest',
+	namespaceOnly: true,
 	message: 'Cannot execute a BatchRequest with no URL or method'
 });
 

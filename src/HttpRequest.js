@@ -11,10 +11,14 @@ axios.defaults.httpsAgent = new https.Agent({ keepAlive: true });
 const [ MissingUrlError, BatchAlreadyExecutingError ] = createErrors([
 	{
 		name: 'MissingUrlError',
+		namespace: 'HttpRequest',
+		namespaceOnly: true,
 		message: 'Cannot execute an HttpRequest with no URL'
 	},
 	{
 		name: 'BatchAlreadyExecutingError',
+		namespace: 'HttpRequest',
+		namespaceOnly: true,
 		message: 'Cannot execute a BatchRequest that is already being executed (make sure you aren\'t passing `true` to the executor functions more than once for the same batch, or try increasing the `stall` timeout)'
 	}
 ]);
